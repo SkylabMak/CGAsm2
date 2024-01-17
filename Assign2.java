@@ -29,6 +29,7 @@ public class Assign2 extends JPanel implements Runnable {
         (new Thread(l)).start();
     }
 
+    // tool ----------------------------------------
     public static void myFillRect(Graphics g, int x, int y, int width, int height) {
         // Loop to fill the rectangle with individual pixels
         for (int i = x; i < x + width; i++) {
@@ -130,7 +131,7 @@ public class Assign2 extends JPanel implements Runnable {
                 }
 
             } catch (Exception e) {
-                System.out.println("test error in flood fill");
+                System.out.println("error in flood fill");
             }
 
         }
@@ -174,6 +175,17 @@ public class Assign2 extends JPanel implements Runnable {
         return image;
     }
 
+    private Color interpolateColor(Color startColor, Color endColor, float ratio) {
+
+        int red = (int) (startColor.getRed() + ratio * (endColor.getRed() - startColor.getRed()));
+        int green = (int) (startColor.getGreen() + ratio * (endColor.getGreen() - startColor.getGreen()));
+        int blue = (int) (startColor.getBlue() + ratio * (endColor.getBlue() - startColor.getBlue()));
+        int alpha = (int) (startColor.getAlpha() + ratio * (endColor.getAlpha() - startColor.getBlue()));
+
+        return new Color(red, green, blue, alpha);
+    }
+
+    // tool ----------------------------------------
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
@@ -213,7 +225,10 @@ public class Assign2 extends JPanel implements Runnable {
     // controler
 
     Double movingCloud = 0.0;
-
+    Double movingCicle = 210.0;
+    Color clorCStart = Color.MAGENTA;
+    Color clorCEnd = Color.WHITE;
+    Boolean past = true;
     private void weather(Graphics g) {
         currentTime = System.currentTimeMillis();
         Double elapsedTime = currentTime - lastTime;
@@ -224,20 +239,89 @@ public class Assign2 extends JPanel implements Runnable {
         movingCloud += 50 * elapsedTime / 1000.0;
         // System.out.println(movingCloud);
 
-        cloud(g, 50 + movingCloud.intValue()*2, 25, 0.5);
-        cloud(g, movingCloud.intValue()-330, 25, 1);
-        cloud(g, 123 + movingCloud.intValue(), 50, 1);
-        cloud(g, 300 + (int)(movingCloud.intValue()*0.5), 2, 1);
-        cloud(g, (int)(movingCloud.intValue()*1.3-250), 50, 1);
-        cloud(g, movingCloud.intValue()-100, 50, 1);
-        cloud(g,  movingCloud.intValue()-50, 60, 1.3);
-        cloud(g,  400+movingCloud.intValue(), 40, 1.5);
+        float weight = 0.8f;
+        double i = ((movingCicle+90) % 180);
+        // float ratio = (float) i / 180;
+        float ratio =  (float) Math.pow(i / 180, weight);
+        // System.out.println(ratio);
+        // System.out.println(((movingCicle - 30) % 180));
+        int movingCicleMod = (int) i;
+        // System.out.println(movingCicleMod);
+        
+        if(movingCicleMod>50){
+            past = true;
+        }
+        // Check if movingCicle has passed a multiple of 180 degrees
+        if (movingCicleMod < (50 * elapsedTime / 1000.0)&&past) {
+            past = false;
+            // Swap colors
+            Color tempColor = clorCStart;
+            clorCStart = clorCEnd;
+            clorCEnd = tempColor;
+            System.out.println("Swap color: " + tempColor.toString());
+        }
+        Color clorCloud = interpolateColor(clorCStart, clorCEnd, ratio);
+        ;
+        // cloud
+        cloud(g, 50 + movingCloud.intValue() * 2, 25, 0.5, clorCloud);
+        cloud(g, movingCloud.intValue() - 330, 25, 1, clorCloud);
+        cloud(g, 123 + movingCloud.intValue(), 50, 1, clorCloud);
+        cloud(g, 300 + (int) (movingCloud.intValue() * 0.5), 2, 1, clorCloud);
+        cloud(g, (int) (movingCloud.intValue() * 1.3 - 250), 50, 1, clorCloud);
+        cloud(g, movingCloud.intValue() - 100, 50, 1, clorCloud);
+        cloud(g, movingCloud.intValue() - 50, 60, 1.3, clorCloud);
+        cloud(g, 400 + movingCloud.intValue(), 40, 1.5, clorCloud);
+
+        // moon&sun
+        // movingCicle
+        // rotate x r per second
+        movingCicle += 45 * elapsedTime / 1000.0;
+        moonAndSun(g, movingCicle);
         // System.out.println(currentTime - startTime);
 
     }
-    // controler
 
-    private void cloud(Graphics g, int x, int y, double size) {
+    // controler----------------------------------------
+    // element----------------------------------------
+    private void moonAndSun(Graphics g, double angleDegrees) {
+        BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = buffer.createGraphics();
+
+        // Define the oval path dimensions
+        int size = 50;
+        int a = 300;
+        int b = 200;
+        int pathCenterX = 300;
+        int pathCenterY = 250;
+
+        double angleRadians = Math.toRadians(angleDegrees);
+        double angleRadians2 = Math.toRadians(angleDegrees + 180);
+
+        int ovalX1 = pathCenterX + (int) (a * Math.cos(angleRadians)) - size / 2;
+        int ovalY1 = pathCenterY + (int) (b * Math.sin(angleRadians)) - size / 2;
+
+        int ovalX2 = pathCenterX + (int) (a * Math.cos(angleRadians2)) - size / 2;
+        int ovalY2 = pathCenterY + (int) (b * Math.sin(angleRadians2)) - size / 2;
+
+        // Draw the path for visual reference (not necessary for movement)
+        g2.setColor(Color.BLACK);
+        g2.drawOval(pathCenterX - a, pathCenterY - b, a * 2, b * 2);
+
+        // Draw the object following the path
+        g2.setColor(Color.ORANGE);
+        g2.fillOval(ovalX1, ovalY1, size, size);
+        g2.setColor(Color.white);
+        g2.fillOval(ovalX2, ovalY2, size, size);
+
+        g2.setColor(Color.black);
+        g2.drawOval(ovalX1, ovalY1, size, size);
+        g2.drawOval(ovalX2, ovalY2, size, size);
+
+        // Draw the image buffer to the screen
+        g.drawImage(buffer, 0, 0, null);
+    }
+
+    private void cloud(Graphics g, int x, int y, double size, Color color) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = buffer.createGraphics();
         // int sizeI = (int) size;
@@ -261,20 +345,20 @@ public class Assign2 extends JPanel implements Runnable {
         Point2D.Double transformedPoint = new Point2D.Double();
 
         transform.transform(originalPoint, transformedPoint);
-        if(transformedPoint.x<0){
-            if((((x + 90) * size)-size)>0){
-                transformedPoint.x = ((x + 90) * size)-size;
-                transformedPoint.y += 6* size;
-            
+        if (transformedPoint.x < 0) {
+            if ((((x + 90) * size) - size) > 0) {
+                transformedPoint.x = ((x + 90) * size) - size;
+                transformedPoint.y += 6 * size;
+
             }
         }
-            // while (transformedPoint.x<0) {
-            //     if(transformedPoint.x>(x + 101) * size){
-            //         break;
-            //     }
-            //     transformedPoint.x+=1;
-            //     System.out.println("run");
-            // }
+        // while (transformedPoint.x<0) {
+        // if(transformedPoint.x>(x + 101) * size){
+        // break;
+        // }
+        // transformedPoint.x+=1;
+        // System.out.println("run");
+        // }
         lowPixelBezierCurve(g2, (x + 11) * size, (y + 11) * size, (x + 20) * size, (y - 10) * size,
                 (x + 36) * size, (y + 6) * size, thickness);
         lowPixelBezierCurve(g2, (x + 36) * size, (y + 6) * size, (x + 44) * size, (y - 10) * size, (x + 56) * size,
@@ -291,7 +375,7 @@ public class Assign2 extends JPanel implements Runnable {
                 (x + 50) * size, (y + 27) * size, thickness);
         lowPixelBezierCurve(g2, (x + 50) * size, (y + 27) * size, (x + 45) * size, (y + 35) * size,
                 (x + 40) * size, (y + 27) * size, thickness);
-                
+
         lowPixelBezierCurve(g2, (x + 40) * size, (y + 27) * size, (x + 35) * size, (y + 31) * size,
                 (x + 30) * size, (y + 27) * size, thickness);
         lowPixelBezierCurve(g2, (x + 30) * size, (y + 27) * size, (x + 20) * size, (y + 30) * size,
@@ -301,9 +385,14 @@ public class Assign2 extends JPanel implements Runnable {
 
         g2.setTransform(originalTransform);
         g2.setColor(Color.red);
-        // System.out.println("tset "+isVarid((int)originalPoint.x, (int)originalPoint.y));
+        // System.out.println("tset "+isVarid((int)originalPoint.x,
+        // (int)originalPoint.y));
         // g2.fillRect((int) transformedPoint.x, (int) transformedPoint.y, 2, 2);
-        buffer = floodFill02(buffer, (int) transformedPoint.x, (int) transformedPoint.y, Color.BLACK, Color.yellow);
+        buffer = floodFill02(buffer, (int) transformedPoint.x, (int) transformedPoint.y, Color.BLACK, color);
         g.drawImage(buffer, 0, 0, null);
     }
+}
+
+class element {
+
 }
