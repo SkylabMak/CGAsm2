@@ -56,6 +56,19 @@ public class Assign2 extends JPanel implements Runnable {
                 y2.intValue(), thickness);
     }
 
+    public int[] calTwoXYpath(double angleDegrees, int x, int y, int a, int b, int size) {
+        double angleRadians = Math.toRadians(angleDegrees);
+        double angleRadians2 = Math.toRadians(angleDegrees + 180);
+
+        int ovalX1 = x + (int) (a * Math.cos(angleRadians)) - size / 2;
+        int ovalY1 = y + (int) (b * Math.sin(angleRadians)) - size / 2;
+
+        int ovalX2 = x + (int) (a * Math.cos(angleRadians2)) - size / 2;
+        int ovalY2 = y + (int) (b * Math.sin(angleRadians2)) - size / 2;
+
+        return new int[] { ovalX1, ovalY1, ovalX2, ovalY2 };
+    }
+
     public void lowPixelBezierCurve(Graphics g, int x1, int y1, int ctrlx1, int ctrly1, int x2,
             int y2, int thickness) {
         Graphics2D g2d = (Graphics2D) g;
@@ -180,7 +193,7 @@ public class Assign2 extends JPanel implements Runnable {
         int red = (int) (startColor.getRed() + ratio * (endColor.getRed() - startColor.getRed()));
         int green = (int) (startColor.getGreen() + ratio * (endColor.getGreen() - startColor.getGreen()));
         int blue = (int) (startColor.getBlue() + ratio * (endColor.getBlue() - startColor.getBlue()));
-        int alpha = (int) (startColor.getAlpha() + ratio * (endColor.getAlpha() - startColor.getBlue()));
+        int alpha = (int) (startColor.getAlpha() + ratio * (endColor.getAlpha() - startColor.getAlpha()));
 
         return new Color(red, green, blue, alpha);
     }
@@ -229,30 +242,49 @@ public class Assign2 extends JPanel implements Runnable {
     Color clorCStart = Color.MAGENTA;
     Color clorCEnd = Color.WHITE;
     Boolean past = true;
+    int yOfSun = 200;
+
     private void weather(Graphics g) {
         currentTime = System.currentTimeMillis();
         Double elapsedTime = currentTime - lastTime;
-        // System.out.println("cloud " + elapsedTime);
+        // Define the oval path dimensions
+        int ovalSize = 50;
+        int a = 300;
+        int b = 200;
+        int pathCenterX = 300;
+        int pathCenterY = 200;
 
-        // clound
+        g.setColor(Color.BLACK);
+        g.drawOval(pathCenterX - a, pathCenterY - b, a * 2, b * 2);
+        // System.out.println("cloud " + elapsedTime);
+        int[] points = calTwoXYpath(movingCicle, pathCenterX, pathCenterY, a, b, ovalSize);
+        // drawnSky
+        drawnSky(g, points[1]);
+
+        // moon&sun
+        // rotate x r per second
+        movingCicle += 23 * elapsedTime / 1000.0;
+        moonAndSun(g, points, ovalSize);
+        // System.out.println(currentTime - startTime);
+
+        // clounds
         // Move 50 pixel per second
         movingCloud += 50 * elapsedTime / 1000.0;
         // System.out.println(movingCloud);
 
         float weight = 0.8f;
-        double i = ((movingCicle+90) % 180);
-        // float ratio = (float) i / 180;
-        float ratio =  (float) Math.pow(i / 180, weight);
+        double i = ((movingCicle + 90) % 180);
+        float ratio = (float) Math.pow(i / 180, weight);
         // System.out.println(ratio);
         // System.out.println(((movingCicle - 30) % 180));
         int movingCicleMod = (int) i;
         // System.out.println(movingCicleMod);
-        
-        if(movingCicleMod>50){
+
+        if (movingCicleMod > 50) {
             past = true;
         }
         // Check if movingCicle has passed a multiple of 180 degrees
-        if (movingCicleMod < (50 * elapsedTime / 1000.0)&&past) {
+        if (movingCicleMod < (50 * elapsedTime / 1000.0) && past) {
             past = false;
             // Swap colors
             Color tempColor = clorCStart;
@@ -272,52 +304,59 @@ public class Assign2 extends JPanel implements Runnable {
         cloud(g, movingCloud.intValue() - 50, 60, 1.3, clorCloud);
         cloud(g, 400 + movingCloud.intValue(), 40, 1.5, clorCloud);
 
-        // moon&sun
-        // movingCicle
-        // rotate x r per second
-        movingCicle += 45 * elapsedTime / 1000.0;
-        moonAndSun(g, movingCicle);
-        // System.out.println(currentTime - startTime);
-
     }
 
     // controler----------------------------------------
-    // element----------------------------------------
-    private void moonAndSun(Graphics g, double angleDegrees) {
+    // element controler----------------------------------------
+    private void moonAndSun(Graphics g, int[] points, int size) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = buffer.createGraphics();
 
-        // Define the oval path dimensions
-        int size = 50;
-        int a = 300;
-        int b = 200;
-        int pathCenterX = 300;
-        int pathCenterY = 250;
-
-        double angleRadians = Math.toRadians(angleDegrees);
-        double angleRadians2 = Math.toRadians(angleDegrees + 180);
-
-        int ovalX1 = pathCenterX + (int) (a * Math.cos(angleRadians)) - size / 2;
-        int ovalY1 = pathCenterY + (int) (b * Math.sin(angleRadians)) - size / 2;
-
-        int ovalX2 = pathCenterX + (int) (a * Math.cos(angleRadians2)) - size / 2;
-        int ovalY2 = pathCenterY + (int) (b * Math.sin(angleRadians2)) - size / 2;
-
-        // Draw the path for visual reference (not necessary for movement)
-        g2.setColor(Color.BLACK);
-        g2.drawOval(pathCenterX - a, pathCenterY - b, a * 2, b * 2);
-
         // Draw the object following the path
         g2.setColor(Color.ORANGE);
-        g2.fillOval(ovalX1, ovalY1, size, size);
+        g2.fillOval(points[0], points[1], size, size);
         g2.setColor(Color.white);
-        g2.fillOval(ovalX2, ovalY2, size, size);
+        g2.fillOval(points[2], points[3], size, size);
 
         g2.setColor(Color.black);
-        g2.drawOval(ovalX1, ovalY1, size, size);
-        g2.drawOval(ovalX2, ovalY2, size, size);
+        g2.drawOval(points[0], points[1], size, size);
+        g2.drawOval(points[2], points[3], size, size);
 
         // Draw the image buffer to the screen
+        g.drawImage(buffer, 0, 0, null);
+    }
+
+    // element controler
+    // element
+    private void drawnSky(Graphics g, int y) {
+        BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = buffer.createGraphics();
+        Color colorSStart = Color.decode("#61DEF2");// light color
+        Color colorSEnd = Color.decode("#024DC0");// dark color
+        float count = 100f;
+        float height = 600f;
+        float maxHeight = 600f;
+        float stepSize = height / count;
+        // System.out.println(step);
+        float divider = 0.3f;
+        // sky
+        for (int i = 0; i <= count; i++) {
+            float ratio = (float) i / count;
+            // float ratio = (float) i / count;
+            // if (i <= count * divider) {
+            // ratio = (float) i / (count * divider);
+            // } else {
+            // ratio = 1.0f;
+            // }
+            Color colorCurrent = interpolateColor(colorSStart, colorSEnd, ratio);
+            // int currentY = (int) (maxHeight - (ratio * height));
+            int currentY = (int) ((ratio * height));
+            // System.out.println(currentY);
+            g2.setColor(colorCurrent);
+            g2.setStroke(new BasicStroke(stepSize + 1));
+            g2.drawLine(-1, y + currentY, 601, y + currentY);
+            g2.drawLine(-1, y - currentY, 601, y - currentY);
+        }
         g.drawImage(buffer, 0, 0, null);
     }
 
