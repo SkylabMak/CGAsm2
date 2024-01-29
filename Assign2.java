@@ -17,13 +17,14 @@ public class Assign2 extends JPanel implements Runnable {
     double startTime;
     double lastTime;
     double currentTime;
+    static final int width = 600, height = 600;
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Lab6");
         Assign2 l = new Assign2();
         frame.add(l);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(600, 600);
+        frame.setSize(width, height);
         frame.setVisible(true);
 
         (new Thread(l)).start();
@@ -230,6 +231,7 @@ public class Assign2 extends JPanel implements Runnable {
         weather(g);
         g2.setColor(Color.black);
         g2.fillRect(400, 400, 100, 100);
+        drawGround(g);
     }
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
@@ -326,6 +328,18 @@ public class Assign2 extends JPanel implements Runnable {
         g.drawImage(buffer, 0, 0, null);
     }
 
+    private void drawGround(Graphics g){
+        int floorHeight = 200,startHeight = 400;
+        int boxSizeScale = 1;
+        int boxSize =  boxSizeScale*25;
+        for (int y = startHeight;y<height;y+=boxSize){
+            for (int x = 0; x < width; x+=boxSize) {
+                boxGround(g,x,y,boxSizeScale);
+            }   
+        }
+        // boxGround(g,100,100,boxSizeScale);
+    }
+
     // element controler
     // element
     private void drawnSky(Graphics g, int y) {
@@ -344,8 +358,8 @@ public class Assign2 extends JPanel implements Runnable {
             float ratio = (float) i / count;
             // float ratio = (float) i / count;
             // if (i <= count * divider) {
-            // ratio = (float) i / (count * divider);
-            // } else {
+                // ratio = (float) i / (count * divider);
+                // } else {
             // ratio = 1.0f;
             // }
             Color colorCurrent = interpolateColor(colorSStart, colorSEnd, ratio);
@@ -359,7 +373,39 @@ public class Assign2 extends JPanel implements Runnable {
         }
         g.drawImage(buffer, 0, 0, null);
     }
+    private void boxGround (Graphics g,int x,int y,int size){
+        x /= size;
+        y /= size;
+        int thickness = 2;
+        int halfThickness = thickness/2;
+        Color color = Color.decode("#C84C0C");
+        // (x + 11) * size
+        // Draw the square border
+        int era = 25*size;
 
+        // Draw the border rectangle
+        Graphics2D g2d = (Graphics2D)g;
+        // Set the color for the fill
+        g.setColor(color);
+        // Draw the filled square
+        g.fillRect(x, y, era, era);
+
+        g2d.setStroke(new BasicStroke(thickness));
+        g.setColor(Color.decode("#F1C5A7"));
+        g2d.drawLine(x+halfThickness, y+halfThickness, x+era-halfThickness, y+halfThickness);
+        g2d.drawLine(x+halfThickness, y+halfThickness, x+halfThickness, y+era-halfThickness);
+        g.setColor(Color.black);
+        g2d.drawLine(x+era-halfThickness, y+era-halfThickness,  x+era-halfThickness, y+halfThickness);
+        g2d.drawLine(x+era-halfThickness, y+era-halfThickness, x+halfThickness, y+era-halfThickness);
+        // g.drawRect(x, y, era, era);
+        // g2d.setStroke(new BasicStroke(thickness-1));
+
+        g.setColor(Color.black);
+        g2d.draw(new QuadCurve2D.Double(x+(era-5), y, x+(era-5), y+(era-15), x+10, y+era-halfThickness));
+        g2d.draw(new QuadCurve2D.Double(x+(era-5), y+(era-15), x+(era-3), y+(era-12), x+era, y+(era-15)));
+        g2d.draw(new QuadCurve2D.Double(x, y+(era-10), x+5, y+(era-8), x+(era-10), y+(era-10)));
+    }
+    
     private void cloud(Graphics g, int x, int y, double size, Color color) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = buffer.createGraphics();
@@ -367,11 +413,11 @@ public class Assign2 extends JPanel implements Runnable {
         x /= size;
         y /= size;
         int thickness = 2;
-
+        
         g2.setColor(Color.BLACK);
         AffineTransform originalTransform = g2.getTransform();
         // System.out.println(originalTransform);
-
+        
         AffineTransform transform = new AffineTransform();
         // transform.rotate(Math.toRadians(20), 0, 0);
         // transform.translate(0, 100);
