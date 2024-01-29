@@ -231,7 +231,7 @@ public class Assign2 extends JPanel implements Runnable {
         weather(g);
         g2.setColor(Color.black);
         g2.fillRect(400, 400, 100, 100);
-        drawGround(g);
+        map(g);
     }
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
@@ -328,6 +328,25 @@ public class Assign2 extends JPanel implements Runnable {
         g.drawImage(buffer, 0, 0, null);
     }
 
+    private void map(Graphics g){
+        drawGround(g);
+        int brickY = 300;
+        int brickX = 300;
+        for (int i = 1; i <= 6; i++) {
+            if(i==2)
+            {
+                luckyBox(g,brickX+(i*25),brickY,1);
+            }
+            else{
+                boxBrick(g,brickX+(i*25),brickY,1);
+            }
+        }
+        luckyBox(g, 100, brickY, 1);
+        luckyBox(g, brickX+125, brickY-100, 1);
+    }
+    
+    // element controler
+    // element
     private void drawGround(Graphics g){
         int floorHeight = 200,startHeight = 400;
         int boxSizeScale = 1;
@@ -339,9 +358,6 @@ public class Assign2 extends JPanel implements Runnable {
         }
         // boxGround(g,100,100,boxSizeScale);
     }
-
-    // element controler
-    // element
     private void drawnSky(Graphics g, int y) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = buffer.createGraphics();
@@ -373,7 +389,58 @@ public class Assign2 extends JPanel implements Runnable {
         }
         g.drawImage(buffer, 0, 0, null);
     }
-    private void boxGround (Graphics g,int x,int y,int size){
+
+    private void luckyBox(Graphics g,int x,int y,int size){
+        x /= size;
+        y /= size;
+        int thickness = 2;
+        int halfThickness = thickness/2;
+        Color color = Color.decode("#F78E2F");
+        // (x + 11) * size
+        // Draw the square border
+        int era = 25*size;
+
+        // Draw the border rectangle
+        Graphics2D g2d = (Graphics2D)g;
+        // Set the color for the fill
+        g.setColor(color);
+        // Draw the filled square
+        g.fillRect(x, y, era, era);
+
+        g2d.setStroke(new BasicStroke(thickness));
+        
+        // g.drawRect(x, y, era, era);
+        // g2d.setStroke(new BasicStroke(thickness-1));
+
+        g.setColor(Color.black);
+        int thicknessFont = 3;
+        int halfEra = era/2;
+        int halfEra2 = halfEra/2;
+        g2d.fillRect(x+halfEra-2, y+halfEra+halfEra2, thicknessFont, thicknessFont);
+        g2d.setStroke(new BasicStroke(thicknessFont));
+        g2d.draw(new CubicCurve2D.Float(x+halfEra, y+halfEra+halfEra2-6, x+era, y+8, x+halfEra, y, x+halfEra2, y+8));
+        g2d.fillRect(x+halfEra-2, y+halfEra+halfEra2-6, thicknessFont, thicknessFont+2);
+
+        //border
+        g2d.setStroke(new BasicStroke(thickness));
+        g.setColor(Color.decode("#CD4D07"));
+        g2d.drawLine(x+halfThickness, y+halfThickness-1, x+era-halfThickness, y+halfThickness-1);
+        g2d.drawLine(x+halfThickness, y+halfThickness, x+halfThickness, y+era-halfThickness);
+        g.setColor(Color.black);
+        g2d.drawLine(x+era-halfThickness, y+era-halfThickness,  x+era-halfThickness, y+halfThickness);
+        g2d.drawLine(x+era-halfThickness, y+era-halfThickness, x+halfThickness, y+era-halfThickness);
+        
+        int margin = 2;
+        int addMargin = 3;
+        int dotSize = 2;
+        g2d.fillRect(x+margin, y+margin, dotSize, dotSize);
+        g2d.fillRect(x+era-margin-addMargin, y+margin, dotSize, dotSize);
+        g2d.fillRect(x+margin, y+era-margin-addMargin, dotSize, dotSize);
+        g2d.fillRect(x+era-margin-addMargin, y+era-margin-addMargin, dotSize, dotSize);
+    
+    }
+
+    private void boxBrick(Graphics g,int x,int y,int size){
         x /= size;
         y /= size;
         int thickness = 2;
@@ -391,8 +458,59 @@ public class Assign2 extends JPanel implements Runnable {
         g.fillRect(x, y, era, era);
 
         g2d.setStroke(new BasicStroke(thickness));
+        
+        // g.drawRect(x, y, era, era);
+        // g2d.setStroke(new BasicStroke(thickness-1));
+
+        g.setColor(Color.black);
+        int count = 4,dis = era/count;
+        int halfEra = era/2;
+        int halfEra2 = halfEra/2;
+        int index = 1;
+        for (int i = dis; i < era; i+=dis) {
+            g2d.drawLine(x+halfThickness, y+i, x+era-halfThickness, y+i);
+
+            if(index%2 != 0){
+                g2d.drawLine(x+halfEra, y+i, x+halfEra, y+i-dis);
+                g2d.drawLine(x+era-halfThickness, y+i, x+era-halfThickness, y+i-dis);
+            }
+            else{
+                g2d.drawLine(x+halfEra2, y+i, x+halfEra2, y+i-dis);
+                g2d.drawLine(x+era-halfEra2, y+i, x+era-halfEra2, y+i-dis);
+            }
+            index++;
+        }
+
+        //border
+        g.setColor(Color.decode("#FFB39C"));
+        g2d.drawLine(x+halfThickness, y+halfThickness-1, x+era-halfThickness, y+halfThickness-1);
+        // g2d.drawLine(x+halfThickness, y+halfThickness, x+halfThickness, y+era-halfThickness);
+        g.setColor(Color.black);
+        // g2d.drawLine(x+era-halfThickness, y+era-halfThickness,  x+era-halfThickness, y+halfThickness);
+        g2d.drawLine(x+era-halfThickness, y+era-halfThickness, x+halfThickness, y+era-halfThickness);
+    }
+
+    private void boxGround (Graphics g,int x,int y,int size){
+        x /= size;
+        y /= size;
+        int thickness = 2;
+        int halfThickness = thickness/2;
+        Color color = Color.decode("#C84C0C");
+        // (x + 11) * size
+        // Draw the square border
+        int era = 25*size;
+
+        // Draw the border rectangle
+        Graphics2D g2d = (Graphics2D)g;
+        // Set the color for the fill
+        g.setColor(color);
+        // Draw the filled square
+        g.fillRect(x, y, era, era);
+
+        //border
+        g2d.setStroke(new BasicStroke(thickness));
         g.setColor(Color.decode("#F1C5A7"));
-        g2d.drawLine(x+halfThickness, y+halfThickness, x+era-halfThickness, y+halfThickness);
+        g2d.drawLine(x+halfThickness, y+halfThickness-1, x+era-halfThickness, y+halfThickness-1);
         g2d.drawLine(x+halfThickness, y+halfThickness, x+halfThickness, y+era-halfThickness);
         g.setColor(Color.black);
         g2d.drawLine(x+era-halfThickness, y+era-halfThickness,  x+era-halfThickness, y+halfThickness);
