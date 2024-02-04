@@ -281,8 +281,8 @@ public class Assign2 extends JPanel implements Runnable {
         boolean found = false;
         x = centerX;
         y = centerY;
-        int xR = a / 2;
-        int yR = b / 2;
+        int xR = a ;
+        int yR = b ;
         if (!isVarid(x, y)) {
             int xStart = x - xR ;
             int yStart = y - yR;
@@ -291,7 +291,8 @@ public class Assign2 extends JPanel implements Runnable {
            
             for (int i = xStart; i <= xEnd; i++) {
                 for (int j = yStart; j <= yEnd; j++) {
-                    if (isVarid(i, j) && isInsideEllipse(i, j, x, y, xR, yR, 2)) {
+                    // setRGBMine(buffer,i, j,1,Color.red);
+                    if (isVarid(i, j) && isInsideEllipse(i, j, centerX, centerY, xR, yR,  thickness)) {
                         found = true;
                         x = i;
                         y = j;
@@ -302,8 +303,9 @@ public class Assign2 extends JPanel implements Runnable {
                     break;
             }
         }
-        g2.setColor(Color.red);
-        g2.fillRect(x, y, 2,2);
+        // g2.setColor(Color.red);
+        // g2.fillRect(x, y, 2,2);
+        // setRGBMine(buffer,x, y,5,Color.red);
         buffer = floodFill02(buffer, (int) (x), (int) (y), colorBorder, color);
         
     }
