@@ -659,5 +659,9 @@ public class Assign2 extends JPanel implements Runnable {
 }
 
 class element {
-
+    public void drawMarioFrame(int n) {
+        switch (n) {
+            case 0:
+        }
+    }
 }
