@@ -71,7 +71,7 @@ public class Assign2 extends JPanel implements Runnable {
     int startHeightGround = 400;
     // _________________Mario&&mushroom__________________
     double marioScale = 1;
-    double marioMove = 0;
+    double marioMove = -100;
     int startScaleTime = 3000;
     int currentAltitude = startHeightGround;
     int mushroomAltitude = 350;
@@ -120,40 +120,44 @@ public class Assign2 extends JPanel implements Runnable {
         // }
         // g2d.transform(transform);
 
-        if (totalElapsedTime < 2000) {
-            int des = 100;
-            double t = 2000;
-            marioMove = des * (totalElapsedTime / t);
-        } else if (totalElapsedTime < 2750) {
+        if (totalElapsedTime < 4000) {
+            int des = 200;
+            double t = 4000;
+            marioMove = (des * (totalElapsedTime / t)) - 100;
+        } else if (totalElapsedTime < 4750) {
             int target = 50;
             double t = 750;
-            currentAltitude = Math.round((int) (y - (target * ((totalElapsedTime - 2000) / t))));
-        } else if (totalElapsedTime < 3500) {
+            currentAltitude = Math.round((int) (y - (target * ((totalElapsedTime - 4000) / t))));
+        } else if (totalElapsedTime < 5500) {
             int target = 55;
             int mushroomTarget = 25;
             double t = 750;
             currentAltitude = Integer.min(startHeightGround,
-                    (Math.round((int) (y - 50 + (target * ((totalElapsedTime - 2750) / t))))));
-            mushroomAltitude = Math.round((int) (325 - (mushroomTarget * (totalElapsedTime - 2750) / t)));
-        } else if (totalElapsedTime < 4000) {
+                    (Math.round((int) (y - 50 + (target * ((totalElapsedTime - 4750) / t))))));
+            mushroomAltitude = Math.round((int) (325 - (mushroomTarget * (totalElapsedTime - 4750) / t)));
+        } else if (totalElapsedTime < 6000) {
             int des = 25;
             double t = 500;
-            marioMove = 100 + (des * ((totalElapsedTime - 3500) / t));
-        } else if (totalElapsedTime < 5500) {
-            int des = 75;
+            marioMove = 100 + (des * ((totalElapsedTime - 5500) / t));
+        } else if (totalElapsedTime < 7000) {
+            int des = 50;
             int target = 75;
-            double t = 1500;
-            marioMove = 125 + (des * ((totalElapsedTime - 4000) / t));
-            mushroomAltitude = (Math.round((int) (300 + (target * ((totalElapsedTime - 4000) / t)))));
-        } else if (totalElapsedTime < 6500) {
+            double t = 1000;
+            marioMove = 125 + (des * ((totalElapsedTime - 6000) / t));
+            mushroomAltitude = (Math.round((int) (300 + (target * ((totalElapsedTime - 6000) / t)))));
+        } else if (totalElapsedTime < 8000) {
             frame = 4;
             currentHeight = (((int) totalElapsedTime % 200) / 100) + 1;
-        } else {
+        } else if (marioMove <= 600) {
             currentHeight = 2;
             marioMove += 50 * elapsedTime / 1000;
+        } else {
+            startTime = System.currentTimeMillis();
+            marioMove = -100;
+            currentHeight = 1;
         }
         e.drawMarioFrame(frame, (int) (x + marioMove), currentAltitude, currentWidth, currentHeight, g2d);
-        if (totalElapsedTime >= 2750 && totalElapsedTime <= 5500) {
+        if (totalElapsedTime >= 4750 && totalElapsedTime <= 7000) {
             e.drawMushroom((int) (x + marioMove), mushroomAltitude, 2, g2d);
         }
         // e.drawMarioFrame(frame, (int) (x + marioMove), y, startSize, startSize, g2d);
