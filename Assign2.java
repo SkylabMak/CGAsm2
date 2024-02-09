@@ -61,6 +61,7 @@ public class Assign2 extends JPanel implements Runnable {
         g2.fillRect(400, 400, 100, 100);
         map(g);
         MarioMovement(g);
+        mushroomBlock(g);
     }
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
@@ -72,6 +73,8 @@ public class Assign2 extends JPanel implements Runnable {
     double marioScale = 1;
     double marioMove = 0;
     int startScaleTime = 3000;
+    int currentAltitude = startHeightGround;
+    int mushroomAltitude = 350;
 
     public void MarioMovement(Graphics g) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
@@ -80,36 +83,80 @@ public class Assign2 extends JPanel implements Runnable {
         int x = 0, y = startHeightGround;
         currentTime = System.currentTimeMillis();
         Double elapsedTime = currentTime - lastTime;
-        int startSize = 2;
+        // int startSize = 1;
+        int currentWidth = 2;
+        int currentHeight = 1;
         int frame = 1;
+        long totalElapsedTime = (System.currentTimeMillis() - startTime);
 
         AffineTransform transform = new AffineTransform();
+        if (currentAltitude < startHeightGround) {
+            frame = 4;
+        } else {
+            frame = (int) ((currentTime / 10) % 3) + 1;
+        }
         // transform.translate(100, 0);
         // System.out.println("mario run");
         // System.out.println(System.currentTimeMillis() - startTime);
-        if (System.currentTimeMillis() - startTime > startScaleTime) {
-            // scaling
-            marioScale += 1 * elapsedTime / 1000.0;
-            // System.out.println(marioScale);
-            g2d.transform(AffineTransform.getTranslateInstance(x + marioMove, y));
-            g2d.transform(AffineTransform.getScaleInstance(marioScale, marioScale));
-            g2d.transform(AffineTransform.getTranslateInstance(-x - marioMove, -y));
-            // scaling
-        } else if (System.currentTimeMillis() - startTime > 2000) {
+        // if (System.currentTimeMillis() - startTime > startScaleTime) {
+        // // scaling
+        // marioScale += 1 * elapsedTime / 1000.0;
+        // // System.out.println(marioScale);
+        // g2d.transform(AffineTransform.getTranslateInstance(x + marioMove, y));
+        // g2d.transform(AffineTransform.getScaleInstance(marioScale, marioScale));
+        // g2d.transform(AffineTransform.getTranslateInstance(-x - marioMove, -y));
+        // // scaling
+        // } else if (System.currentTimeMillis() - startTime > 2000) {
 
+        // } else {
+        // int des = 330;
+        // int t = 2;
+        // // move 5 px per s.
+        // marioMove += (((des - x) / (t * 2))) * elapsedTime / 1000.0;
+        // frame = (int) ((currentTime / 10) % 3) + 1;
+        // System.out.println(frame);
+
+        // // System.out.println("run");
+        // }
+        // g2d.transform(transform);
+
+        if (totalElapsedTime < 2000) {
+            int des = 100;
+            double t = 2000;
+            marioMove = des * (totalElapsedTime / t);
+        } else if (totalElapsedTime < 2750) {
+            int target = 50;
+            double t = 750;
+            currentAltitude = Math.round((int) (y - (target * ((totalElapsedTime - 2000) / t))));
+        } else if (totalElapsedTime < 3500) {
+            int target = 55;
+            int mushroomTarget = 25;
+            double t = 750;
+            currentAltitude = Integer.min(startHeightGround,
+                    (Math.round((int) (y - 50 + (target * ((totalElapsedTime - 2750) / t))))));
+            mushroomAltitude = Math.round((int) (325 - (mushroomTarget * (totalElapsedTime - 2750) / t)));
+        } else if (totalElapsedTime < 4000) {
+            int des = 25;
+            double t = 500;
+            marioMove = 100 + (des * ((totalElapsedTime - 3500) / t));
+        } else if (totalElapsedTime < 5500) {
+            int des = 75;
+            int target = 75;
+            double t = 1500;
+            marioMove = 125 + (des * ((totalElapsedTime - 4000) / t));
+            mushroomAltitude = (Math.round((int) (300 + (target * ((totalElapsedTime - 4000) / t)))));
+        } else if (totalElapsedTime < 6500) {
+            frame = 4;
+            currentHeight = (((int) totalElapsedTime % 200) / 100) + 1;
         } else {
-            int des = 330;
-            int t = 2;
-            // move 5 px per s.
-            marioMove += (((des - x) / (t * 2))) * elapsedTime / 1000.0;
-            frame = (int) ((currentTime/10)%3)+1;
-            System.out.println(frame);
-
-            // System.out.println("run");
+            currentHeight = 2;
+            marioMove += 50 * elapsedTime / 1000;
         }
-        g2d.transform(transform);
-
-        e.drawMarioFrame(frame, (int) (x + marioMove), y, startSize, startSize, g2d);
+        e.drawMarioFrame(frame, (int) (x + marioMove), currentAltitude, currentWidth, currentHeight, g2d);
+        if (totalElapsedTime >= 2750 && totalElapsedTime <= 5500) {
+            e.drawMushroom((int) (x + marioMove), mushroomAltitude, 2, g2d);
+        }
+        // e.drawMarioFrame(frame, (int) (x + marioMove), y, startSize, startSize, g2d);
         // System.out.println(startTime);
         g.drawImage(buffer, 0, 0, null);
     }
@@ -205,6 +252,10 @@ public class Assign2 extends JPanel implements Runnable {
     // ____________________Map____________________
     double speedBush = 10;
 
+    public void mushroomBlock(Graphics g) {
+        e.luckyBox(g, 100, 300, 1);
+    }
+
     public void map(Graphics g) {
         currentTime = System.currentTimeMillis();
         Double elapsedTime = currentTime - lastTime;
@@ -232,7 +283,6 @@ public class Assign2 extends JPanel implements Runnable {
                 e.boxBrick(g, brickX + (i * 25), brickY, 1);
             }
         }
-        e.luckyBox(g, 100, brickY, 1);
         e.luckyBox(g, brickX + 125, brickY - 100, 1);
     }
     // ____________________Map____________________
@@ -316,14 +366,3 @@ public class Assign2 extends JPanel implements Runnable {
     // Combine elements
 
 }
-<<<<<<< HEAD
-
-class element {
-    public void drawMarioFrame(int n) {
-        switch (n) {
-            case 0:
-        }
-    }
-}
-=======
->>>>>>> f764e2edb702512d78f31f009810015c0538d8c9
