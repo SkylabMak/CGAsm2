@@ -6,18 +6,15 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.CubicCurve2D;
-import java.awt.geom.QuadCurve2D;
-import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
-import java.util.LinkedList;
-import java.util.Queue;
 
 public class Assign2 extends JPanel implements Runnable {
     static long startTime;
     double lastTime;
     double currentTime;
     static final int width = 600, height = 600;
+    Tool tool = new Tool();
+    Element e = new Element();
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Lab6");
@@ -28,304 +25,6 @@ public class Assign2 extends JPanel implements Runnable {
         frame.setVisible(true);
         startTime = System.currentTimeMillis();
         (new Thread(l)).start();
-    }
-
-    // tool ----------------------------------------
-    private void plot(Graphics g, int x, int y) {
-        g.fillRect(x, y, 1, 1);
-    }
-
-    private void fillRectMine(Graphics g, int x, int y, int thickness) {
-        int halfThickness = thickness / 2;
-        // g.setColor(color);
-        for (int i = -halfThickness; i <= halfThickness; i++) {
-            for (int j = -halfThickness; j <= halfThickness; j++) {
-                plot(g, x + i, y + j);
-            }
-        }
-    }
-
-    public static void myFillRect(Graphics g, int x, int y, int width, int height) {
-        // Loop to fill the rectangle with individual pixels
-        for (int i = x; i < x + width; i++) {
-            for (int j = y; j < y + height; j++) {
-                g.fillRect(i, j, 1, 1); // Drawing a single pixel
-            }
-        }
-    }
-
-    private boolean isInsideEllipse(int x, int y, int centerX, int centerY, int xRadius, int yRadius, int thickness) {
-        double normalizedX = (x - centerX) / (double) (xRadius - thickness);
-        double normalizedY = (y - centerY) / (double) (yRadius - thickness);
-        double equationResult = Math.pow(normalizedX, 2) + Math.pow(normalizedY, 2);
-        return equationResult < 1;
-    }
-    private void drawEllipse(Graphics g, int centerX, int centerY, int a, int b,Color color,Color colorBorder,int thickness){
-        BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
-        // Graphics2D g2 = buffer.createGraphics();
-
-        drawEllipse(buffer, centerX,centerY,a,b,color,colorBorder,thickness);
-        // Draw the image buffer to the screen
-        g.drawImage(buffer, 0, 0, null);
-    }
-
-    private void drawEllipse(BufferedImage buffer, int centerX, int centerY, int a, int b,Color color,Color colorBorder,int thickness) {
-        int a2 = a * a;
-        int b2 = b * b;
-        int twoA2 = 2 * a2;
-        int twoB2 = 2 * b2;
-        // g2.setColor(colorBorder);
-        // REGION 1
-        int x = 0;
-        int y = b;
-        int D = Math.round(b2 - a2 * b + a2 / 4);
-        int Dx = 0;
-        int Dy = twoA2 * y;
-
-        while (Dx <= Dy) {
-            plotQuadrants( buffer, centerX, centerY, x, y,colorBorder,thickness);
-            x = x + 1;
-            Dx = Dx + twoB2;
-            D = D + Dx + b2;
-
-            if (D >= 0) {
-                y = y - 1;
-                Dy = Dy - twoA2;
-                D = D - Dy;
-            }
-        }
-
-        // REGION 2
-        x = a;
-        y = 0;
-        D = Math.round(a2 - b2 * a + b2 / 4);
-        Dx = twoB2 * x;
-        Dy = 0;
-
-        while (Dx >= Dy) {
-            plotQuadrants( buffer, centerX, centerY, x, y,colorBorder,thickness);
-            y = y + 1;
-            Dy = Dy + twoA2;
-            D = D + Dy + a2;
-
-            if (D >= 0) {
-                x = x - 1;
-                Dx = Dx - twoB2;
-                D = D - Dx;
-            }
-        }
-        boolean found = false;
-        x = centerX;
-        y = centerY;
-        int xR = a ;
-        int yR = b ;
-        if (!isVarid(x, y)) {
-            int xStart = x - xR ;
-            int yStart = y - yR;
-            int xEnd = x + xR;
-            int yEnd = y + yR;
-           
-            for (int i = xStart; i <= xEnd; i++) {
-                for (int j = yStart; j <= yEnd; j++) {
-                    // setRGBMine(buffer,i, j,1,Color.red);
-                    if (isVarid(i, j) && isInsideEllipse(i, j, centerX, centerY, xR, yR,  thickness)) {
-                        found = true;
-                        x = i;
-                        y = j;
-                        break;
-                    }
-                }
-                if (found)
-                    break;
-            }
-        }
-        // g2.setColor(Color.red);
-        // g2.fillRect(x, y, 2,2);
-        // setRGBMine(buffer,x, y,5,Color.red);
-        buffer = floodFill02(buffer, (int) (x), (int) (y), colorBorder, color);
-        
-    }
-
-    private void plotQuadrants(BufferedImage buffer, int centerX, int centerY, int x, int y,Color color,int thickness) {
-        setRGBMine(buffer,centerX + x, centerY + y,thickness,color);
-        setRGBMine(buffer,centerX - x, centerY + y,thickness,color);
-        setRGBMine(buffer,centerX + x, centerY - y,thickness,color);
-        setRGBMine(buffer,centerX - x, centerY - y,thickness,color);
-    }
-    private void setRGBMine(BufferedImage buffer, int x, int y, int thickness, Color color) {
-        int halfThickness = thickness / 2;
-        for (int i = -halfThickness; i <= halfThickness; i++) {
-            for (int j = -halfThickness; j <= halfThickness; j++) {
-                try {
-                    if (!isVarid(x + i, y + j)) {
-                        continue;
-                    }
-                    buffer.setRGB(x + i, y + j, color.getRGB());
-                } catch (Exception e) {
-                    continue;
-                }
-
-            }
-        }
-    }
-
-    public void lowPixelBezierCurve(Graphics g, int x1, int y1, int ctrlx1, int ctrly1, int ctrlx2, int ctrly2, int x2,
-            int y2, int thickness) {
-        for (double t = 0; t <= 1; t += 0.01) {
-            double x = Math.pow(1 - t, 3) * x1 + 3 * t * Math.pow(1 - t, 2) * ctrlx1 +
-                    3 * Math.pow(t, 2) * (1 - t) * ctrlx2 + Math.pow(t, 3) * x2;
-            double y = Math.pow(1 - t, 3) * y1 + 3 * t * Math.pow(1 - t, 2) * ctrly1 +
-                    3 * Math.pow(t, 2) * (1 - t) * ctrly2 + Math.pow(t, 3) * y2;
-            g.fillRect((int) x, (int) y, thickness, thickness); // Drawing a "pixel" of size 5x5
-        }
-    }
-
-    public void lowPixelBezierCurve(Graphics g, Double x1, Double y1, Double ctrlx1, Double ctrly1, Double x2,
-            Double y2, int thickness) {
-        lowPixelBezierCurve(g, x1.intValue(), y1.intValue(), ctrlx1.intValue(), ctrly1.intValue(), x2.intValue(),
-                y2.intValue(), thickness);
-    }
-
-    public int[] calTwoXYpath(double angleDegrees, int x, int y, int a, int b, int size) {
-        double angleRadians = Math.toRadians(angleDegrees);
-        double angleRadians2 = Math.toRadians(angleDegrees + 180);
-
-        int ovalX1 = x + (int) (a * Math.cos(angleRadians)) - size / 2;
-        int ovalY1 = y + (int) (b * Math.sin(angleRadians)) - size / 2;
-
-        int ovalX2 = x + (int) (a * Math.cos(angleRadians2)) - size / 2;
-        int ovalY2 = y + (int) (b * Math.sin(angleRadians2)) - size / 2;
-
-        return new int[] { ovalX1, ovalY1, ovalX2, ovalY2 };
-    }
-
-    public void lowPixelBezierCurve(Graphics g, int x1, int y1, int ctrlx1, int ctrly1, int x2,
-            int y2, int thickness) {
-        Graphics2D g2d = (Graphics2D) g;
-        g2d.setStroke(new BasicStroke(thickness));
-        g2d.draw(new QuadCurve2D.Double(x1, y1, ctrlx1, ctrly1, x2, y2));
-        // for (double t = 0; t <= 1; t += 0.01) {
-        // double x = Math.pow(1 - t, 2) * x1 + 2 * (1 - t) * t * ctrlx1 + Math.pow(t,
-        // 2) * x2;
-        // double y = Math.pow(1 - t, 2) * y1 + 2 * (1 - t) * t * ctrly1 + Math.pow(t,
-        // 2) * y2;
-        // g.fillRect((int) x, (int) y, thickness, thickness);
-        // Drawing a "pixel" ofsize 5x5
-        // }
-    }
-
-    private boolean isVarid(int x, int y) {
-        return (x > -1 && x < 601) && (y > -1 && y < 601);
-    }
-
-    public BufferedImage floodFill(BufferedImage m, int x, int y, Color border, Color replace) {
-        Queue<int[]> q = new LinkedList<>();
-
-        q.add(new int[] { x, y });
-        int borderRGB = border.getRGB();
-        int replaceRGB = replace.getRGB();
-        int[] currentPos;
-        // System.out.println(x + " " + y);
-        // m.setRGB(x, y, Color.RED.getRGB());
-        while (!q.isEmpty()) {
-            currentPos = q.poll();
-            int x1 = currentPos[0];
-            int y1 = currentPos[1];
-
-            try {
-                if (m.getRGB(x1, y1) != borderRGB && m.getRGB(x1, y1) != replaceRGB) {
-                    m.setRGB(x1, y1, replaceRGB);
-                    // south
-                    try {
-                        if (m.getRGB(x1, y1 + 1) != borderRGB
-                                && m.getRGB(x1, y1 + 1) != replaceRGB) {
-                            q.add(new int[] { x1, y1 + 1 });
-                        }
-                    } catch (Exception e) {
-                        // System.out.println(x1 + " " + y1);
-                    }
-                    try {
-                        // north
-                        if (m.getRGB(x1, y1 - 1) != borderRGB
-                                && m.getRGB(x1, y1 - 1) != replaceRGB) {
-                            q.add(new int[] { x1, y1 - 1 });
-                        }
-                    } catch (Exception e) {
-                        // System.out.println(x1 + " " + y1);
-                    }
-                    try {
-                        // east
-                        if (m.getRGB(x1 + 1, y1) != borderRGB
-                                && m.getRGB(x1 + 1, y1) != replaceRGB) {
-                            q.add(new int[] { x1 + 1, y1 });
-                        }
-                    } catch (Exception e) {
-                        // System.out.println(x1 + " " + y1);
-                    }
-                    try {
-                        // west
-                        if (m.getRGB(x1 - 1, y1) != borderRGB
-                                && m.getRGB(x1 - 1, y1) != replaceRGB) {
-                            q.add(new int[] { x1 - 1, y1 });
-                        }
-                    } catch (Exception e) {
-                        // System.out.println(x1 + " " + y1);
-                    }
-                }
-
-            } catch (Exception e) {
-                System.out.println("error in flood fill");
-            }
-
-        }
-
-        return m;
-    }
-
-    public static BufferedImage floodFill02(BufferedImage image, int x, int y, Color border, Color replace) {
-        int width = image.getWidth();
-        int height = image.getHeight();
-
-        // int targetColor = image.getRGB(x, y);
-        try {
-
-            Queue<int[]> queue = new LinkedList<>();
-            queue.add(new int[] { x, y });
-
-            while (!queue.isEmpty()) {
-                int[] position = queue.remove();
-                int currentX = position[0];
-                int currentY = position[1];
-
-                if (currentX < 0 || currentX >= width || currentY < 0 || currentY >= height) {
-                    continue;
-                }
-
-                if (image.getRGB(currentX, currentY) != border.getRGB()
-                        && image.getRGB(currentX, currentY) != replace.getRGB()) {
-                    image.setRGB(currentX, currentY, replace.getRGB());
-
-                    queue.add(new int[] { currentX + 1, currentY });
-                    queue.add(new int[] { currentX - 1, currentY });
-                    queue.add(new int[] { currentX, currentY + 1 });
-                    queue.add(new int[] { currentX, currentY - 1 });
-                }
-            }
-
-        } catch (java.lang.ArrayIndexOutOfBoundsException e) {
-            // System.out.println("");
-        }
-        return image;
-    }
-
-    private Color interpolateColor(Color startColor, Color endColor, float ratio) {
-
-        int red = (int) (startColor.getRed() + ratio * (endColor.getRed() - startColor.getRed()));
-        int green = (int) (startColor.getGreen() + ratio * (endColor.getGreen() - startColor.getGreen()));
-        int blue = (int) (startColor.getBlue() + ratio * (endColor.getBlue() - startColor.getBlue()));
-        int alpha = (int) (startColor.getAlpha() + ratio * (endColor.getAlpha() - startColor.getAlpha()));
-
-        return new Color(red, green, blue, alpha);
     }
 
     // tool ----------------------------------------
@@ -361,13 +60,66 @@ public class Assign2 extends JPanel implements Runnable {
         g2.setColor(Color.black);
         g2.fillRect(400, 400, 100, 100);
         map(g);
+        MarioMovement(g);
     }
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
     // work space------------------------------------------------------------
 
-    // controler
+    // time controler-------------------------------
+    int startHeightGround = 400;
+    // _________________Mario&&mushroom__________________
+    double marioScale = 1;
+    double marioMove = 0;
+    int startScaleTime = 3000;
 
+    public void MarioMovement(Graphics g) {
+        BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = buffer.createGraphics();
+        AffineTransform originalTransform = g2d.getTransform();
+        int x = 0, y = startHeightGround;
+        currentTime = System.currentTimeMillis();
+        Double elapsedTime = currentTime - lastTime;
+        int startSize = 2;
+        int frame = 1;
+
+        AffineTransform transform = new AffineTransform();
+        // transform.translate(100, 0);
+        // System.out.println("mario run");
+        // System.out.println(System.currentTimeMillis() - startTime);
+        if (System.currentTimeMillis() - startTime > startScaleTime) {
+            // scaling
+            marioScale += 1 * elapsedTime / 1000.0;
+            // System.out.println(marioScale);
+            g2d.transform(AffineTransform.getTranslateInstance(x + marioMove, y));
+            g2d.transform(AffineTransform.getScaleInstance(marioScale, marioScale));
+            g2d.transform(AffineTransform.getTranslateInstance(-x - marioMove, -y));
+            // scaling
+        } else if (System.currentTimeMillis() - startTime > 2000) {
+
+        } else {
+            int des = 330;
+            int t = 2;
+            // move 5 px per s.
+            marioMove += (((des - x) / (t * 2))) * elapsedTime / 1000.0;
+            frame = (int) ((currentTime/10)%3)+1;
+            System.out.println(frame);
+
+            // System.out.println("run");
+        }
+        g2d.transform(transform);
+
+        e.drawMarioFrame(frame, (int) (x + marioMove), y, startSize, startSize, g2d);
+        // System.out.println(startTime);
+        g.drawImage(buffer, 0, 0, null);
+    }
+
+    public void mushroomMovement(Graphics g) {
+        e.drawMushroom(300, 300, 1, g);
+    }
+
+    // _________________Mario&&mushroom__________________
+    // ________________weather________________
     Double movingCloud = 0.0;
     Double movingCicle = 210.0;
     Color clorCStart = Color.decode("#00A7FA");
@@ -379,7 +131,7 @@ public class Assign2 extends JPanel implements Runnable {
     int countCycle = 0;
     double speedCloud = 25;
 
-    private void weather(Graphics g) {
+    public void weather(Graphics g) {
         // System.out.println(maskTime);
         currentTime = System.currentTimeMillis();
         Double elapsedTime = currentTime - lastTime;
@@ -393,7 +145,7 @@ public class Assign2 extends JPanel implements Runnable {
         g.setColor(Color.BLACK);
         g.drawOval(pathCenterX - a, pathCenterY - b, a * 2, b * 2);
         // System.out.println("cloud " + elapsedTime);
-        int[] points = calTwoXYpath(movingCicle, pathCenterX, pathCenterY, a, b, ovalSize);
+        int[] points = tool.calTwoXYpath(movingCicle, pathCenterX, pathCenterY, a, b, ovalSize);
         // drawnSky
         drawnSky(g, points[1]);
 
@@ -424,7 +176,7 @@ public class Assign2 extends JPanel implements Runnable {
             clorCEnd = tempColor;
             System.out.println("Swap color: " + tempColor.toString());
         }
-        Color clorCloud = interpolateColor(clorCStart, clorCEnd, ratio);
+        Color clorCloud = tool.interpolateColor(clorCStart, clorCEnd, ratio);
         // cloud
         // Move 50 pixel per second
         movingCloud += speedCloud * elapsedTime / 1000.0;
@@ -438,20 +190,56 @@ public class Assign2 extends JPanel implements Runnable {
         }
         movingCloud += speedCloud * elapsedTime / 1000.0;
 
-        cloud(g, 50 + movingCloud.intValue() * 2, 25, 0.5, clorCloud);
-        cloud(g, movingCloud.intValue() - 330, 25, 1, clorCloud);
-        cloud(g, 123 + movingCloud.intValue(), 50, 1, clorCloud);
-        cloud(g, 300 + (int) (movingCloud.intValue() * 0.5), 2, 1, clorCloud);
-        cloud(g, (int) (movingCloud.intValue() * 1.3 - 250), 50, 1, clorCloud);
-        cloud(g, movingCloud.intValue() - 100, 50, 1, clorCloud);
-        cloud(g, movingCloud.intValue() - 50, 60, 1.3, clorCloud);
-        cloud(g, 400 + movingCloud.intValue(), 40, 1.5, clorCloud);
+        e.cloud(g, 50 + movingCloud.intValue() * 2, 25, 0.5, clorCloud);
+        e.cloud(g, movingCloud.intValue() - 330, 25, 1, clorCloud);
+        e.cloud(g, 123 + movingCloud.intValue(), 50, 1, clorCloud);
+        e.cloud(g, 300 + (int) (movingCloud.intValue() * 0.5), 2, 1, clorCloud);
+        e.cloud(g, (int) (movingCloud.intValue() * 1.3 - 250), 50, 1, clorCloud);
+        e.cloud(g, movingCloud.intValue() - 100, 50, 1, clorCloud);
+        e.cloud(g, movingCloud.intValue() - 50, 60, 1.3, clorCloud);
+        e.cloud(g, 400 + movingCloud.intValue(), 40, 1.5, clorCloud);
 
     }
 
-    // controler----------------------------------------
+    // ________________weather________________
+    // ____________________Map____________________
+    double speedBush = 10;
+
+    public void map(Graphics g) {
+        currentTime = System.currentTimeMillis();
+        Double elapsedTime = currentTime - lastTime;
+
+        int bushY = 365;
+        int lenBush = 5;
+        if (movingLean > lenBush) {
+            speedBush = -speedBush;
+        }
+        if (movingLean < -lenBush) {
+            speedBush = -speedBush;
+        }
+        movingLean += speedBush * elapsedTime / 1000.0;
+        e.bush(g, 50, bushY, 1, movingLean);
+        e.bush(g, 400, bushY + 17, 0.5, movingLean);
+        // System.out.println(movingLean);
+
+        drawGround(g);
+        int brickY = 300;
+        int brickX = 300;
+        for (int i = 1; i <= 6; i++) {
+            if (i == 2) {
+                e.luckyBox(g, brickX + (i * 25), brickY, 1);
+            } else {
+                e.boxBrick(g, brickX + (i * 25), brickY, 1);
+            }
+        }
+        e.luckyBox(g, 100, brickY, 1);
+        e.luckyBox(g, brickX + 125, brickY - 100, 1);
+    }
+    // ____________________Map____________________
+
+    // time controler----------------------------------------
     // element controler----------------------------------------
-    private void moonAndSun(Graphics g, int[] points, int size) {
+    public void moonAndSun(Graphics g, int[] points, int size) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = buffer.createGraphics();
 
@@ -465,66 +253,35 @@ public class Assign2 extends JPanel implements Runnable {
         // g2.drawOval(points[0], points[1], size, size);
         // g2.drawOval(points[2], points[3], size, size);
 
-        //my oval 
+        // my oval
         int thickness = 1;
-        size/=2;
+        size /= 2;
         // g2.setColor(Color.ORANGE);
-        drawEllipse(g,points[0], points[1], size, size,Color.ORANGE,Color.BLACK,thickness);
+        tool.drawEllipse(g, points[0], points[1], size, size, Color.ORANGE, Color.BLACK, thickness);
         // g2.setColor(Color.white);
-        drawEllipse(g,points[2], points[3], size, size,Color.white,Color.BLACK,thickness);
+        tool.drawEllipse(g, points[2], points[3], size, size, Color.white, Color.BLACK, thickness);
 
         // Draw the image buffer to the screen
         g.drawImage(buffer, 0, 0, null);
     }
 
-    double speedBush = 10;
-
-    private void map(Graphics g) {
-        currentTime = System.currentTimeMillis();
-        Double elapsedTime = currentTime - lastTime;
-
-        int bushY = 365;
-        int lenBush = 5;
-        if (movingLean > lenBush) {
-            speedBush = -speedBush;
-        }
-        if (movingLean < -lenBush) {
-            speedBush = -speedBush;
-        }
-        movingLean += speedBush * elapsedTime / 1000.0;
-        bush(g, 50, bushY, 1, movingLean);
-        bush(g, 400, bushY + 17, 0.5, movingLean);
-        // System.out.println(movingLean);
-
-        drawGround(g);
-        int brickY = 300;
-        int brickX = 300;
-        for (int i = 1; i <= 6; i++) {
-            if (i == 2) {
-                luckyBox(g, brickX + (i * 25), brickY, 1);
-            } else {
-                boxBrick(g, brickX + (i * 25), brickY, 1);
-            }
-        }
-        luckyBox(g, 100, brickY, 1);
-        luckyBox(g, brickX + 125, brickY - 100, 1);
-    }
-
     // element controler
-    // element
-    private void drawGround(Graphics g) {
-        int floorHeight = 200, startHeight = 400;
+    // -----------------------------------------------------------
+    // Combine elements
+    public void drawGround(Graphics g) {
+        int floorHeight = 200;
         int boxSizeScale = 1;
         int boxSize = boxSizeScale * 25;
-        for (int y = startHeight; y < height; y += boxSize) {
+        for (int y = startHeightGround; y < height; y += boxSize) {
             for (int x = 0; x < width; x += boxSize) {
-                boxGround(g, x, y, boxSizeScale);
+                e.boxGround(g, x, y, boxSizeScale);
             }
         }
         // boxGround(g,100,100,boxSizeScale);
     }
 
-    private void drawnSky(Graphics g, int y) {
+    // sky
+    public void drawnSky(Graphics g, int y) {
         BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = buffer.createGraphics();
         Color colorSStart = Color.decode("#61DEF2");// light color
@@ -544,7 +301,7 @@ public class Assign2 extends JPanel implements Runnable {
             // } else {
             // ratio = 1.0f;
             // }
-            Color colorCurrent = interpolateColor(colorSStart, colorSEnd, ratio);
+            Color colorCurrent = tool.interpolateColor(colorSStart, colorSEnd, ratio);
             // int currentY = (int) (maxHeight - (ratio * height));
             int currentY = (int) ((ratio * height));
             // System.out.println(currentY);
@@ -556,245 +313,10 @@ public class Assign2 extends JPanel implements Runnable {
         g.drawImage(buffer, 0, 0, null);
     }
 
-    private void bush(Graphics g, int x, int y, double size, double lean) {
-        BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = buffer.createGraphics();
-        x /= size;
-        y /= size;
-        int thickness = 2;
-        int halfThickness = thickness / 2;
-        Color color = Color.decode("#85B905");
-        // Graphics2D g2d = (Graphics2D) g;
-        g2d.setColor(Color.decode("#0D7F0D"));
-        g2d.setStroke(new BasicStroke(thickness));
-        g2d.draw(new QuadCurve2D.Double((x) * size, (y + 34) * size, (x + 16 + lean) * size, (y + 9) * size,
-                (x + 21) * size, (y + 14) * size));
-        g2d.draw(new QuadCurve2D.Double((x + 21) * size, (y + 14) * size, (x + 38 + lean) * size, (y + 3) * size,
-                (x + 48) * size, (y + 11) * size));
-        g2d.draw(new QuadCurve2D.Double((x + 48) * size, (y + 11) * size, (x + 60 + lean) * size, (y + 2) * size,
-                (x + 71) * size, (y + 15) * size));
-        g2d.draw(new QuadCurve2D.Double((x + 71) * size, (y + 15) * size, (x + 86 + lean) * size, (y + 7) * size,
-                (x + 101) * size, (y + 15) * size));
-        g2d.draw(new QuadCurve2D.Double((x + 71) * size, (y + 15) * size, (x + 86 + lean) * size, (y + 7) * size,
-                (x + 101) * size, (y + 15) * size));
-        g2d.draw(new QuadCurve2D.Double((x + 101) * size, (y + 15) * size, (x + 125 + lean) * size, (y + 13) * size,
-                (x + 130) * size, (y + 34) * size));
-        g2d.draw(new QuadCurve2D.Double((x + 130) * size, (y + 34) * size, (x + 64 + lean) * size, (y + 40) * size,
-                (x) * size, (y + 34) * size));
-        buffer = floodFill02(buffer, (int) ((x + 58) * size), (int) ((y + 24) * size), Color.decode("#0D7F0D"), color);
-        g.drawImage(buffer, 0, 0, null);
-    }
+    // Combine elements
 
-    private void luckyBox(Graphics g, int x, int y, int size) {
-        x /= size;
-        y /= size;
-        int thickness = 2;
-        int halfThickness = thickness / 2;
-        Color color = Color.decode("#F78E2F");
-        // (x + 11) * size
-        // Draw the square border
-        int era = 25 * size;
-
-        // Draw the border rectangle
-        Graphics2D g2d = (Graphics2D) g;
-        // Set the color for the fill
-        g.setColor(color);
-        // Draw the filled square
-        g.fillRect(x, y, era, era);
-
-        g2d.setStroke(new BasicStroke(thickness));
-
-        // g.drawRect(x, y, era, era);
-        // g2d.setStroke(new BasicStroke(thickness-1));
-
-        g.setColor(Color.black);
-        int thicknessFont = 3;
-        int halfEra = era / 2;
-        int halfEra2 = halfEra / 2;
-        g2d.fillRect(x + halfEra - 2, y + halfEra + halfEra2, thicknessFont, thicknessFont);
-        g2d.setStroke(new BasicStroke(thicknessFont));
-        g2d.draw(new CubicCurve2D.Float(x + halfEra, y + halfEra + halfEra2 - 6, x + era, y + 8, x + halfEra, y,
-                x + halfEra2, y + 8));
-        g2d.fillRect(x + halfEra - 2, y + halfEra + halfEra2 - 6, thicknessFont, thicknessFont + 2);
-
-        // border
-        g2d.setStroke(new BasicStroke(thickness));
-        g.setColor(Color.decode("#CD4D07"));
-        g2d.drawLine(x + halfThickness, y + halfThickness - 1, x + era - halfThickness, y + halfThickness - 1);
-        g2d.drawLine(x + halfThickness, y + halfThickness, x + halfThickness, y + era - halfThickness);
-        g.setColor(Color.black);
-        g2d.drawLine(x + era - halfThickness, y + era - halfThickness, x + era - halfThickness, y + halfThickness);
-        g2d.drawLine(x + era - halfThickness, y + era - halfThickness, x + halfThickness, y + era - halfThickness);
-
-        int margin = 2;
-        int addMargin = 3;
-        int dotSize = 2;
-        g2d.fillRect(x + margin, y + margin, dotSize, dotSize);
-        g2d.fillRect(x + era - margin - addMargin, y + margin, dotSize, dotSize);
-        g2d.fillRect(x + margin, y + era - margin - addMargin, dotSize, dotSize);
-        g2d.fillRect(x + era - margin - addMargin, y + era - margin - addMargin, dotSize, dotSize);
-
-    }
-
-    private void boxBrick(Graphics g, int x, int y, int size) {
-        x /= size;
-        y /= size;
-        int thickness = 2;
-        int halfThickness = thickness / 2;
-        Color color = Color.decode("#C84C0C");
-        // (x + 11) * size
-        // Draw the square border
-        int era = 25 * size;
-
-        // Draw the border rectangle
-        Graphics2D g2d = (Graphics2D) g;
-        // Set the color for the fill
-        g.setColor(color);
-        // Draw the filled square
-        g.fillRect(x, y, era, era);
-
-        g2d.setStroke(new BasicStroke(thickness));
-
-        // g.drawRect(x, y, era, era);
-        // g2d.setStroke(new BasicStroke(thickness-1));
-
-        g.setColor(Color.black);
-        int count = 4, dis = era / count;
-        int halfEra = era / 2;
-        int halfEra2 = halfEra / 2;
-        int index = 1;
-        for (int i = dis; i < era; i += dis) {
-            g2d.drawLine(x + halfThickness, y + i, x + era - halfThickness, y + i);
-
-            if (index % 2 != 0) {
-                g2d.drawLine(x + halfEra, y + i, x + halfEra, y + i - dis);
-                g2d.drawLine(x + era - halfThickness, y + i, x + era - halfThickness, y + i - dis);
-            } else {
-                g2d.drawLine(x + halfEra2, y + i, x + halfEra2, y + i - dis);
-                g2d.drawLine(x + era - halfEra2, y + i, x + era - halfEra2, y + i - dis);
-            }
-            index++;
-        }
-
-        // border
-        g.setColor(Color.decode("#FFB39C"));
-        g2d.drawLine(x + halfThickness, y + halfThickness - 1, x + era - halfThickness, y + halfThickness - 1);
-        // g2d.drawLine(x+halfThickness, y+halfThickness, x+halfThickness,
-        // y+era-halfThickness);
-        g.setColor(Color.black);
-        // g2d.drawLine(x+era-halfThickness, y+era-halfThickness, x+era-halfThickness,
-        // y+halfThickness);
-        g2d.drawLine(x + era - halfThickness, y + era - halfThickness, x + halfThickness, y + era - halfThickness);
-    }
-
-    private void boxGround(Graphics g, int x, int y, int size) {
-        x /= size;
-        y /= size;
-        int thickness = 2;
-        int halfThickness = thickness / 2;
-        Color color = Color.decode("#C84C0C");
-        // (x + 11) * size
-        // Draw the square border
-        int era = 25 * size;
-
-        // Draw the border rectangle
-        Graphics2D g2d = (Graphics2D) g;
-        // Set the color for the fill
-        g.setColor(color);
-        // Draw the filled square
-        g.fillRect(x, y, era, era);
-
-        // border
-        g2d.setStroke(new BasicStroke(thickness));
-        g.setColor(Color.decode("#F1C5A7"));
-        g2d.drawLine(x + halfThickness, y + halfThickness - 1, x + era - halfThickness, y + halfThickness - 1);
-        g2d.drawLine(x + halfThickness, y + halfThickness, x + halfThickness, y + era - halfThickness);
-        g.setColor(Color.black);
-        g2d.drawLine(x + era - halfThickness, y + era - halfThickness, x + era - halfThickness, y + halfThickness);
-        g2d.drawLine(x + era - halfThickness, y + era - halfThickness, x + halfThickness, y + era - halfThickness);
-        // g.drawRect(x, y, era, era);
-        // g2d.setStroke(new BasicStroke(thickness-1));
-
-        g.setColor(Color.black);
-        g2d.draw(new QuadCurve2D.Double(x + (era - 7), y, x + (era - 5), y + (era - 15), x + 10,
-                y + era - halfThickness));
-        g2d.draw(new QuadCurve2D.Double(x + (era - 7), y + (era - 15), x + (era - 3), y + (era - 12), x + era,
-                y + (era - 15)));
-        g2d.draw(new QuadCurve2D.Double(x, y + (era - 10), x + 5, y + (era - 8), x + (era - 10), y + (era - 10)));
-    }
-
-    private void cloud(Graphics g, int x, int y, double size, Color color) {
-        BufferedImage buffer = new BufferedImage(600, 600, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = buffer.createGraphics();
-        // int sizeI = (int) size;
-        // System.out.println("x :"+x+" "+(x/size));
-        x /= size;
-        y /= size;
-        int thickness = 2;
-
-        g2.setColor(Color.BLACK);
-        AffineTransform originalTransform = g2.getTransform();
-        // System.out.println(originalTransform);
-
-        AffineTransform transform = new AffineTransform();
-        // transform.rotate(Math.toRadians(20), 0, 0);
-        // transform.translate(0, 100);
-        // transform.scale(sizeI, sizeI);
-        g2.transform(transform);
-
-        int xNew = (int) ((x + 11 + thickness) * size);
-        int yNew = (int) ((y + 11 + thickness) * size);
-        Point2D.Double originalPoint = new Point2D.Double(xNew, yNew);
-        Point2D.Double transformedPoint = new Point2D.Double();
-
-        transform.transform(originalPoint, transformedPoint);
-        if (transformedPoint.x < 0) {
-            if ((((x + 90) * size) - size) > 0) {
-                transformedPoint.x = ((x + 90) * size) - size;
-                transformedPoint.y += 6 * size;
-
-            }
-        }
-        // while (transformedPoint.x<0) {
-        // if(transformedPoint.x>(x + 101) * size){
-        // break;
-        // }
-        // transformedPoint.x+=1;
-        // System.out.println("run");
-        // }
-        lowPixelBezierCurve(g2, (x + 11) * size, (y + 11) * size, (x + 20) * size, (y - 10) * size,
-                (x + 36) * size, (y + 6) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 36) * size, (y + 6) * size, (x + 44) * size, (y - 10) * size, (x + 56) * size,
-                (y + 6) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 56) * size, (y + 6) * size, (x + 68) * size, (y - 10) * size, (x + 79) * size,
-                (y + 10) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 79) * size, (y + 10) * size, (x + 101) * size, (y + 20) * size,
-                (x + 85) * size, (y + 25) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 85) * size, (y + 25) * size, (x + 81) * size, (y + 39) * size,
-                (x + 70) * size, (y + 27) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 70) * size, (y + 27) * size, (x + 65) * size, (y + 35) * size,
-                (x + 60) * size, (y + 27) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 60) * size, (y + 27) * size, (x + 55) * size, (y + 31) * size,
-                (x + 50) * size, (y + 27) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 50) * size, (y + 27) * size, (x + 45) * size, (y + 35) * size,
-                (x + 40) * size, (y + 27) * size, thickness);
-
-        lowPixelBezierCurve(g2, (x + 40) * size, (y + 27) * size, (x + 35) * size, (y + 31) * size,
-                (x + 30) * size, (y + 27) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 30) * size, (y + 27) * size, (x + 20) * size, (y + 30) * size,
-                (x + 15) * size, (y + 27) * size, thickness);
-        lowPixelBezierCurve(g2, (x + 15) * size, (y + 27) * size, x * size, (y + 30) * size, (x + 11) * size,
-                (y + 11) * size, thickness);
-
-        g2.setTransform(originalTransform);
-        g2.setColor(Color.red);
-        // System.out.println("tset "+isVarid((int)originalPoint.x,
-        // (int)originalPoint.y));
-        // g2.fillRect((int) transformedPoint.x, (int) transformedPoint.y, 2, 2);
-        buffer = floodFill02(buffer, (int) transformedPoint.x, (int) transformedPoint.y, Color.BLACK, color);
-        g.drawImage(buffer, 0, 0, null);
-    }
 }
+<<<<<<< HEAD
 
 class element {
     public void drawMarioFrame(int n) {
@@ -803,3 +325,5 @@ class element {
         }
     }
 }
+=======
+>>>>>>> f764e2edb702512d78f31f009810015c0538d8c9
